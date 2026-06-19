@@ -9,6 +9,7 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
     get habits_url
 
     assert_response :success
+    assert_select "link[rel='stylesheet'][href*='tailwind']"
     assert_select "h2", text: habits(:one).name
     assert_select "h2", text: habits(:two).name, count: 0
   end
