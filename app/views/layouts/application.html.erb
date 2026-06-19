@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Habit Tracker" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Habit Tracker">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="app-background min-h-screen text-[#344258] antialiased">
+    <% if authenticated? %>
+      <header class="bg-white/85">
+        <nav class="mx-auto flex min-h-24 max-w-[1040px] items-center justify-center overflow-x-auto px-4">
+          <div class="flex items-center gap-8 whitespace-nowrap text-[16px] font-semibold">
+            <%= link_to root_path, class: "flex items-center gap-2 text-[#344258]" do %>
+              <span class="grid size-3.5 place-items-center rounded-[3px] bg-[#35c995] text-[10px] leading-none text-white">✓</span>
+              My habits
+            <% end %>
+            <span class="flex items-center gap-2 text-[#344258]">
+              <span aria-hidden="true">♟</span>
+              Profile
+            </span>
+            <span class="flex items-center gap-2 text-[#91a1ba]">
+              <span aria-hidden="true">★</span>
+              Premium
+            </span>
+            <span class="flex items-center gap-2 text-[#91a1ba]">
+              <span class="font-mono" aria-hidden="true">&lt;/&gt;</span>
+              Notion embeds
+            </span>
+            <details class="relative">
+              <summary class="flex cursor-pointer list-none items-center gap-2 text-[#91a1ba]">
+                <span aria-hidden="true">⚙</span>
+                Settings
+              </summary>
+              <div class="absolute right-0 z-20 mt-3 w-64 rounded-md border border-[#d8e1ed] bg-white p-3 text-sm font-normal shadow-lg">
+                <p class="truncate text-[#7f8da3]"><%= Current.user.email_address %></p>
+                <%= button_to "Sign out", session_path, method: :delete, class: "mt-3 w-full rounded border border-[#d8e1ed] px-3 py-2 text-left text-[#344258] hover:bg-[#f7f9fc]" %>
+              </div>
+            </details>
+          </div>
+        </nav>
+      </header>
+    <% end %>
+
+    <% if notice %>
+      <div class="mx-auto mt-4 max-w-[1040px] px-4">
+        <p class="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><%= notice %></p>
+      </div>
+    <% end %>
+
+    <% if alert %>
+      <div class="mx-auto mt-4 max-w-[1040px] px-4">
+        <p class="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800"><%= alert %></p>
+      </div>
+    <% end %>
+
+    <main class="mx-auto w-full max-w-[1040px] px-1 py-4 sm:py-4">
+      <%= yield %>
+    </main>
+  </body>
+</html>

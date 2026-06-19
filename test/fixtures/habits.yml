@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  name: Read
+  color: "#10b981"
+  position: 1
+
+two:
+  user: two
+  name: Workout
+  color: "#f59e0b"
+  position: 1

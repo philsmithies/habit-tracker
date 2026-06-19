@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@layer base {
+  button,
+  input {
+    font: inherit;
+  }
+}
+
+.app-background {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(#f5f7fa 1px, transparent 1px),
+    linear-gradient(90deg, #f5f7fa 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}

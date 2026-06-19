@@ -1,0 +1,115 @@
+<% content_for :title, "My habits" %>
+
+<section class="flex flex-col gap-4 border-y border-[#edf1f6] bg-white/90 py-4 sm:flex-row sm:items-center">
+  <%= form_with url: habits_path, method: :get, class: "relative min-w-0 flex-1" do |form| %>
+    <svg class="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#8ea0ba]" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="8.5" cy="8.5" r="5.5"></circle>
+      <path d="m13 13 4 4"></path>
+    </svg>
+    <%= form.search_field :q, value: params[:q], placeholder: "Search habits", class: "h-[43px] w-full rounded-[5px] border border-[#d8e1ed] bg-white pl-12 pr-24 text-[16px] text-[#344258] outline-none placeholder:text-[#91a1ba] focus:border-[#aebdd0]" %>
+    <span class="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 items-center gap-1 text-[10px] text-[#8ea0ba] sm:flex">
+      <kbd class="rounded bg-[#e6ecf4] px-1.5 py-1">command</kbd>
+      <kbd class="rounded bg-[#e6ecf4] px-1.5 py-1">K</kbd>
+    </span>
+  <% end %>
+
+  <button type="button" class="h-[43px] rounded-[5px] border border-[#d8e1ed] bg-white px-4 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]">
+    Reorder <span class="ml-1 text-xs">◆</span>
+  </button>
+
+  <details class="relative">
+    <summary class="flex h-[43px] cursor-pointer list-none items-center rounded-[5px] border border-[#d8e1ed] bg-white px-4 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]">
+      Create habit <span class="ml-3 text-xs">⌄</span>
+    </summary>
+    <div class="absolute right-0 z-20 mt-2 w-80 rounded-md border border-[#d8e1ed] bg-white p-4 shadow-xl">
+      <%= form_with model: @habit, class: "space-y-3" do |form| %>
+        <% if @habit.errors.any? %>
+          <p class="text-sm text-rose-600"><%= @habit.errors.full_messages.to_sentence %></p>
+        <% end %>
+        <%= form.text_field :name, required: true, autofocus: true, placeholder: "Habit name", class: "h-10 w-full rounded border border-[#d8e1ed] px-3 outline-none focus:border-[#aebdd0]" %>
+        <div class="flex items-center gap-3">
+          <%= form.color_field :color, value: @habit.color || "#10b981", class: "h-10 w-12 cursor-pointer rounded border border-[#d8e1ed] bg-white p-1", title: "Habit color" %>
+          <%= form.submit "Create habit", class: "h-10 flex-1 cursor-pointer rounded bg-[#344258] px-4 font-medium text-white hover:bg-[#263449]" %>
+        </div>
+      <% end %>
+    </div>
+  </details>
+</section>
+
+<section class="mt-10 space-y-10">
+  <% if @habits.empty? %>
+    <div class="rounded-[6px] border border-dashed border-[#d8e1ed] bg-white p-12 text-center">
+      <h2 class="text-xl font-semibold text-[#344258]"><%= params[:q].present? ? "No matching habits" : "Add your first habit" %></h2>
+      <p class="mt-1 text-sm text-[#91a1ba]"><%= params[:q].present? ? "Try another search." : "Use Create habit to get started." %></p>
+    </div>
+  <% end %>
+
+  <% @habits.each do |habit| %>
+    <% weeks = habit_calendar_weeks %>
+    <% entries_by_date = habit.entries.index_by(&:occurred_on) %>
+    <% today_entry = entries_by_date[Date.current] %>
+
+    <article id="<%= dom_id(habit) %>" class="rounded-[6px] border border-[#d8e1ed] bg-white px-8 py-8 sm:px-8 sm:py-8">
+      <div class="flex items-start justify-between">
+        <h2 class="text-[26px] font-semibold leading-none text-[#344258]"><%= habit.name %></h2>
+        <div class="flex items-center gap-5 text-[#c4d0df]">
+          <span title="Calendar" aria-hidden="true">▣</span>
+          <%= button_to "⋮", habit_path(habit), method: :delete, class: "text-xl leading-none hover:text-rose-500", form: { data: { turbo_confirm: "Delete #{habit.name} and its history?" } } %>
+        </div>
+      </div>
+
+      <div class="mt-6 overflow-x-auto pb-2">
+        <div class="grid min-w-[900px] grid-cols-[28px_1fr] gap-x-2">
+          <div></div>
+          <div class="grid grid-cols-[repeat(52,minmax(0,1fr))] gap-[3px] text-center text-[12px] text-[#526077]">
+            <% weeks.each_with_index do |week, index| %>
+              <span class="h-4 whitespace-nowrap"><%= month_label_for(week, index.zero? ? nil : weeks[index - 1]) %></span>
+            <% end %>
+          </div>
+
+          <div class="grid grid-rows-7 gap-[3px] text-right text-[12px] leading-[13px] text-[#526077]">
+            <span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span>
+          </div>
+
+          <div class="grid grid-cols-[repeat(52,minmax(0,1fr))] gap-[3px]" aria-label="Last 52 weeks">
+            <% weeks.each do |week| %>
+              <div class="grid grid-rows-7 gap-[3px]">
+                <% week.each do |date| %>
+                  <% entry = entries_by_date[date] %>
+                  <% if entry %>
+                    <%= button_to habit_entry_path(habit, entry), method: :delete, title: "#{date.to_fs(:long)} — completed", class: "size-[13px] rounded-[2px] ring-1 ring-inset ring-black/5", style: "background-color: #{habit.color}" do %>
+                      <span class="sr-only">Remove completion for <%= date.to_fs(:long) %></span>
+                    <% end %>
+                  <% elsif date <= Date.current %>
+                    <%= button_to habit_entries_path(habit), params: { occurred_on: date }, title: "Log #{date.to_fs(:long)}", class: "size-[13px] rounded-[2px] bg-[#f0f4f8] ring-1 ring-inset ring-[#dfe7f0] hover:bg-[#e1e8f0]" do %>
+                      <span class="sr-only">Log completion for <%= date.to_fs(:long) %></span>
+                    <% end %>
+                  <% else %>
+                    <span class="size-[13px] rounded-[2px] bg-white ring-1 ring-inset ring-[#344258]"></span>
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 flex min-h-14 items-end justify-between gap-4">
+        <div class="text-[15px] leading-6 text-[#91a1ba]">
+          <p>Streak: <strong class="font-semibold text-[#344258]"><%= pluralize(habit.current_streak, "day") %></strong></p>
+          <p>Average: <strong class="font-semibold text-[#344258]"><%= number_with_precision(habit.entries.size / 52.0, precision: 2) %></strong></p>
+        </div>
+
+        <% if today_entry %>
+          <%= button_to habit_entry_path(habit, today_entry), method: :delete, class: "rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]" do %>
+            Undo today <span class="ml-2">←</span>
+          <% end %>
+        <% else %>
+          <%= button_to habit_entries_path(habit), class: "rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]" do %>
+            Log today <span class="ml-2">→</span>
+          <% end %>
+        <% end %>
+      </div>
+    </article>
+  <% end %>
+</section>
