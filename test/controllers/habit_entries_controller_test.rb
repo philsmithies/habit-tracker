@@ -20,4 +20,12 @@ class HabitEntriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
+
+  test "logs a value for a number habit" do
+    habit = users(:one).habits.create!(name: "Read", color: "#8b5cf6", tracking_type: "number", unit: "pages")
+
+    post habit_entries_url(habit), params: { occurred_on: Date.current, value: 24 }
+
+    assert_equal 24, habit.entries.last.value
+  end
 end

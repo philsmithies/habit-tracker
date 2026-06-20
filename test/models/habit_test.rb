@@ -26,4 +26,12 @@ class HabitTest < ActiveSupport::TestCase
 
     assert_equal 1, habit.current_streak
   end
+
+  test "averages values for number habits" do
+    habit = users(:one).habits.create!(name: "Read", color: "#8b5cf6", tracking_type: "number", unit: "pages")
+    habit.entries.create!(occurred_on: Date.current - 1.day, value: 10)
+    habit.entries.create!(occurred_on: Date.current, value: 20)
+
+    assert_equal 15, habit.average_value
+  end
 end

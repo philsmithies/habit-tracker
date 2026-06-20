@@ -17,16 +17,36 @@
     Reorder <span class="ml-1 text-xs">◆</span>
   </button>
 
-  <details class="relative">
+  <details class="relative" <%= "open" if @show_habit_form %>>
     <summary class="flex h-[43px] cursor-pointer list-none items-center rounded-[5px] border border-[#d8e1ed] bg-white px-4 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]">
       Create habit <span class="ml-3 text-xs">⌄</span>
     </summary>
-    <div class="absolute right-0 z-20 mt-2 w-80 rounded-md border border-[#d8e1ed] bg-white p-4 shadow-xl">
-      <%= form_with model: @habit, class: "space-y-3" do |form| %>
+    <div class="absolute right-0 z-20 mt-2 w-80 overflow-hidden rounded-md border border-[#c9d5e4] bg-white shadow-xl" data-controller="habit-type">
+      <div data-habit-type-target="chooser" <%= "hidden" if @show_habit_form %>>
+        <p class="border-b border-[#d8e1ed] px-3 py-2 text-[13px] text-[#91a1ba]">Choose your habit type</p>
+        <%= link_to habits_path(tracking_type: "number"), class: "block w-full px-3 py-2.5 text-left hover:bg-[#f7f9fc]", data: { action: "habit-type#select", habit_type: "number" } do %>
+          <span class="block text-[17px] font-medium text-[#344258]"><span class="mr-2 font-bold">#</span>Number</span>
+          <span class="mt-0.5 block text-[13px] leading-[17px] text-[#91a1ba]">Customizable unit, i.e. miles walked, pages read, or minutes meditated.</span>
+        <% end %>
+        <%= link_to habits_path(tracking_type: "checkbox"), class: "block w-full px-3 py-2.5 text-left hover:bg-[#f7f9fc]", data: { action: "habit-type#select", habit_type: "checkbox" } do %>
+          <span class="block text-[17px] font-medium text-[#344258]"><span class="mr-2">☑</span>Checkbox</span>
+          <span class="mt-0.5 block text-[13px] leading-[17px] text-[#91a1ba]">Track a task that can only be done once, i.e. Went to the gym, waking up before 7.</span>
+        <% end %>
+      </div>
+
+      <%= form_with model: @habit, local: true, class: "space-y-3 p-4", data: { habit_type_target: "form" }, html: { hidden: !@show_habit_form } do |form| %>
+        <div class="flex items-center gap-2">
+          <button type="button" class="text-[#91a1ba] hover:text-[#344258]" data-action="habit-type#back" aria-label="Choose another habit type">←</button>
+          <p class="font-medium text-[#344258]" data-habit-type-target="heading">Create a <%= @habit.number? ? "number" : "checkbox" %> habit</p>
+        </div>
         <% if @habit.errors.any? %>
           <p class="text-sm text-rose-600"><%= @habit.errors.full_messages.to_sentence %></p>
         <% end %>
-        <%= form.text_field :name, required: true, autofocus: true, placeholder: "Habit name", class: "h-10 w-full rounded border border-[#d8e1ed] px-3 outline-none focus:border-[#aebdd0]" %>
+        <%= form.hidden_field :tracking_type, data: { habit_type_target: "type" } %>
+        <%= form.text_field :name, required: true, placeholder: "Habit name", class: "h-10 w-full rounded border border-[#d8e1ed] px-3 outline-none focus:border-[#aebdd0]", data: { habit_type_target: "name" } %>
+        <div data-habit-type-target="unit" <%= "hidden" unless @habit.number? %>>
+          <%= form.text_field :unit, required: @habit.number?, maxlength: 30, placeholder: "Unit (e.g. pages, miles, minutes)", class: "h-10 w-full rounded border border-[#d8e1ed] px-3 outline-none focus:border-[#aebdd0]" %>
+        </div>
         <div class="flex items-center gap-3">
           <%= form.color_field :color, value: @habit.color || "#10b981", class: "h-10 w-12 cursor-pointer rounded border border-[#d8e1ed] bg-white p-1", title: "Habit color" %>
           <%= form.submit "Create habit", class: "h-10 flex-1 cursor-pointer rounded bg-[#344258] px-4 font-medium text-white hover:bg-[#263449]" %>
@@ -47,9 +67,10 @@
   <% @habits.each do |habit| %>
     <% weeks = habit_calendar_weeks %>
     <% entries_by_date = habit.entries.index_by(&:occurred_on) %>
+    <% maximum_value = entries_by_date.values.filter_map(&:value).max %>
     <% today_entry = entries_by_date[Date.current] %>
 
-    <article id="<%= dom_id(habit) %>" class="rounded-[6px] border border-[#d8e1ed] bg-white px-8 py-8 sm:px-8 sm:py-8">
+    <article id="<%= dom_id(habit) %>" class="rounded-[6px] border border-[#d8e1ed] bg-white px-8 py-8 sm:px-8 sm:py-8" <%= 'data-controller="number-entry"' if habit.number? %>>
       <div class="flex items-start justify-between">
         <h2 class="text-[26px] font-semibold leading-none text-[#344258]"><%= habit.name %></h2>
         <div class="flex items-center gap-5 text-[#c4d0df]">
@@ -77,12 +98,18 @@
                 <% week.each do |date| %>
                   <% entry = entries_by_date[date] %>
                   <% if entry %>
-                    <%= button_to habit_entry_path(habit, entry), method: :delete, title: "#{date.to_fs(:long)} — completed", class: "size-[13px] rounded-[2px] ring-1 ring-inset ring-black/5", style: "background-color: #{habit.color}" do %>
+                    <%= button_to habit_entry_path(habit, entry), method: :delete, title: "#{date.to_fs(:long)} — #{habit.number? ? "#{entry.value.to_fs(:delimited)} #{habit.unit}" : "completed"}", class: "size-[13px] rounded-[2px] ring-1 ring-inset ring-black/5", style: "background-color: #{habit_entry_color(habit, entry, maximum_value: maximum_value)}" do %>
                       <span class="sr-only">Remove completion for <%= date.to_fs(:long) %></span>
                     <% end %>
                   <% elsif date <= Date.current %>
-                    <%= button_to habit_entries_path(habit), params: { occurred_on: date }, title: "Log #{date.to_fs(:long)}", class: "size-[13px] rounded-[2px] bg-[#f0f4f8] ring-1 ring-inset ring-[#dfe7f0] hover:bg-[#e1e8f0]" do %>
-                      <span class="sr-only">Log completion for <%= date.to_fs(:long) %></span>
+                    <% if habit.number? %>
+                      <button type="button" title="Log <%= date.to_fs(:long) %>" class="size-[13px] rounded-[2px] bg-[#f0f4f8] ring-1 ring-inset ring-[#dfe7f0] hover:bg-[#e1e8f0]" data-action="number-entry#open" data-date="<%= date %>" data-date-label="<%= date.to_fs(:long) %>">
+                        <span class="sr-only">Log value for <%= date.to_fs(:long) %></span>
+                      </button>
+                    <% else %>
+                      <%= button_to habit_entries_path(habit), params: { occurred_on: date }, title: "Log #{date.to_fs(:long)}", class: "size-[13px] rounded-[2px] bg-[#f0f4f8] ring-1 ring-inset ring-[#dfe7f0] hover:bg-[#e1e8f0]" do %>
+                        <span class="sr-only">Log completion for <%= date.to_fs(:long) %></span>
+                      <% end %>
                     <% end %>
                   <% else %>
                     <span class="size-[13px] rounded-[2px] bg-white ring-1 ring-inset ring-[#344258]"></span>
@@ -97,7 +124,7 @@
       <div class="mt-5 flex min-h-14 items-end justify-between gap-4">
         <div class="text-[15px] leading-6 text-[#91a1ba]">
           <p>Streak: <strong class="font-semibold text-[#344258]"><%= pluralize(habit.current_streak, "day") %></strong></p>
-          <p>Average: <strong class="font-semibold text-[#344258]"><%= number_with_precision(habit.entries.size / 52.0, precision: 2) %></strong></p>
+          <p>Average: <strong class="font-semibold text-[#344258]"><%= habit.number? ? "#{number_with_precision(habit.average_value, precision: 2)} #{habit.unit}" : number_with_precision(habit.entries.size / 52.0, precision: 2) %></strong></p>
         </div>
 
         <% if today_entry %>
@@ -105,11 +132,39 @@
             Undo today <span class="ml-2">←</span>
           <% end %>
         <% else %>
-          <%= button_to habit_entries_path(habit), class: "rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]" do %>
-            Log today <span class="ml-2">→</span>
+          <% if habit.number? %>
+            <%= link_to habits_path(log_habit_id: habit.id), class: "rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]", data: { action: "number-entry#open", date: Date.current, date_label: Date.current.to_fs(:long) } do %>
+              Log today <span class="ml-2">→</span>
+            <% end %>
+          <% else %>
+            <%= button_to habit_entries_path(habit), class: "rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]" do %>
+              Log today <span class="ml-2">→</span>
+            <% end %>
           <% end %>
         <% end %>
       </div>
+
+      <% if habit.number? %>
+        <div <%= "hidden" unless @log_habit_id == habit.id %> class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" data-number-entry-target="dialog" data-action="click->number-entry#closeOnBackdrop">
+          <div class="w-[min(92vw,360px)] rounded-[8px] border border-[#d8e1ed] bg-white p-0 shadow-2xl" data-action="click->number-entry#stopPropagation">
+            <%= form_with url: habit_entries_path(habit), class: "space-y-4 p-5" do |form| %>
+              <div>
+                <h3 class="text-lg font-semibold text-[#344258]">Log <%= habit.name %></h3>
+                <p class="mt-1 text-sm text-[#91a1ba]" data-number-entry-target="dateLabel"></p>
+              </div>
+              <%= form.hidden_field :occurred_on, data: { number_entry_target: "date" } %>
+              <label class="block">
+                <span class="mb-1 block text-sm text-[#526077]">Value in <%= habit.unit %></span>
+                <%= form.number_field :value, required: true, step: "any", class: "h-11 w-full rounded border border-[#d8e1ed] px-3 text-[#344258] outline-none focus:border-[#aebdd0]", data: { number_entry_target: "value" } %>
+              </label>
+              <div class="flex justify-end gap-2">
+                <button type="button" class="rounded px-4 py-2 text-[#526077] hover:bg-[#f7f9fc]" data-action="number-entry#close">Cancel</button>
+                <%= form.submit "Log value", class: "cursor-pointer rounded bg-[#344258] px-4 py-2 font-medium text-white hover:bg-[#263449]" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </article>
   <% end %>
 </section>

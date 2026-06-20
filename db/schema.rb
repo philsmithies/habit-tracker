@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_19_081850) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_20_090000) do
   create_table "habit_entries", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "habit_id", null: false
     t.date "occurred_on", null: false
     t.datetime "updated_at", null: false
+    t.decimal "value", precision: 12, scale: 2
     t.index ["habit_id", "occurred_on"], name: "index_habit_entries_on_habit_id_and_occurred_on", unique: true
     t.index ["habit_id"], name: "index_habit_entries_on_habit_id"
   end
@@ -25,10 +26,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_19_081850) do
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.integer "position", default: 0, null: false
+    t.string "tracking_type", default: "checkbox", null: false
+    t.string "unit"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["user_id", "position"], name: "index_habits_on_user_id_and_position"
     t.index ["user_id"], name: "index_habits_on_user_id"
+    t.check_constraint "tracking_type IN ('checkbox', 'number')", name: "habits_tracking_type"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -43,9 +47,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_19_081850) do
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email_address", null: false
+    t.string "embed_token"
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["embed_token"], name: "index_users_on_embed_token", unique: true
   end
 
   add_foreign_key "habit_entries", "habits"

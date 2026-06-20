@@ -1,0 +1,34 @@
+<div class="space-y-6">
+  <% @habits.each do |habit| %>
+    <% entries_by_date = habit.entries.index_by(&:occurred_on) %>
+    <% maximum_value = entries_by_date.values.filter_map(&:value).max %>
+    <% weeks = habit_calendar_weeks.last(26) %>
+
+    <article class="rounded-[6px] border border-[#d8e1ed] bg-white p-5 sm:p-7">
+      <div class="flex items-baseline justify-between gap-4">
+        <h2 class="text-xl font-semibold text-[#344258]"><%= habit.name %></h2>
+        <span class="text-xs text-[#91a1ba]"><%= pluralize(habit.current_streak, "day") %> streak</span>
+      </div>
+
+      <div class="mt-5 overflow-x-auto pb-2">
+        <div class="grid min-w-[460px] grid-cols-[repeat(26,minmax(0,1fr))] gap-[3px]" aria-label="Last 26 weeks">
+          <% weeks.each do |week| %>
+            <div class="grid grid-rows-7 gap-[3px]">
+              <% week.each do |date| %>
+                <% if (entry = entries_by_date[date]) %>
+                  <span title="<%= date.to_fs(:long) %> — <%= habit.number? ? "#{entry.value.to_fs(:delimited)} #{habit.unit}" : "completed" %>" class="aspect-square w-full rounded-[2px] ring-1 ring-inset ring-black/5" style="background-color: <%= habit_entry_color(habit, entry, maximum_value: maximum_value) %>"></span>
+                <% else %>
+                  <span class="aspect-square w-full rounded-[2px] bg-[#f0f4f8] ring-1 ring-inset ring-[#dfe7f0]"></span>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </article>
+  <% end %>
+
+  <% if @habits.empty? %>
+    <p class="rounded-[6px] border border-dashed border-[#d8e1ed] p-10 text-center text-sm text-[#91a1ba]">No habits to show yet.</p>
+  <% end %>
+</div>

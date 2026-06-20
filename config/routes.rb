@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   resource :session, only: [ :new, :create, :destroy ]
   resources :passwords, param: :token, only: [ :new, :create, :edit, :update ]
   resource :registration, only: [ :new, :create ]
+  resource :embed, only: [ :show, :update ]
+  get "embeds/:token", to: "public_embeds#show", as: :public_embed
 
   resources :habits, only: [ :index, :create, :destroy ] do
     resources :entries, controller: "habit_entries", only: [ :create, :destroy ]

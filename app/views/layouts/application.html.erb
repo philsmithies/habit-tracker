@@ -36,14 +36,10 @@
               <span aria-hidden="true">♟</span>
               Profile
             </span>
-            <span class="flex items-center gap-2 text-[#91a1ba]">
-              <span aria-hidden="true">★</span>
-              Premium
-            </span>
-            <span class="flex items-center gap-2 text-[#91a1ba]">
+            <%= link_to embed_path, class: "flex items-center gap-2 #{current_page?(embed_path) ? "text-[#344258]" : "text-[#91a1ba]"}" do %>
               <span class="font-mono" aria-hidden="true">&lt;/&gt;</span>
-              Notion embeds
-            </span>
+              HTML embed
+            <% end %>
             <details class="relative">
               <summary class="flex cursor-pointer list-none items-center gap-2 text-[#91a1ba]">
                 <span aria-hidden="true">⚙</span>

@@ -18,3 +18,11 @@
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+[hidden] {
+  display: none !important;
+}
+
+dialog::backdrop {
+  background: rgb(52 66 88 / 35%);
+}
