@@ -32,6 +32,16 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "pages", habit.unit
   end
 
+  test "renders number entry as a modal dialog" do
+    habit = users(:one).habits.create!(name: "Read", color: "#8b5cf6", tracking_type: "number", unit: "pages")
+
+    get habits_url(log_habit_id: habit.id)
+
+    assert_select "article[data-controller='number-entry'][data-number-entry-open-value='true']" do
+      assert_select "dialog[data-number-entry-target='dialog']"
+    end
+  end
+
   test "cannot delete another user's habit" do
     assert_no_difference -> { Habit.count } do
       delete habit_url(habits(:two))

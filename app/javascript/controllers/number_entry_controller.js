@@ -2,6 +2,11 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["dialog", "date", "value", "dateLabel"]
+  static values = { open: Boolean }
+
+  connect() {
+    if (this.openValue) this.show()
+  }
 
   open(event) {
     event.preventDefault()
@@ -9,21 +14,12 @@ export default class extends Controller {
     this.dateLabelTarget.textContent = event.currentTarget.dataset.dateLabel
     this.valueTarget.value = ""
 
-    if (typeof this.dialogTarget.showModal === "function") {
-      this.dialogTarget.showModal()
-    } else {
-      this.dialogTarget.hidden = false
-    }
-
+    this.show()
     this.valueTarget.focus()
   }
 
   close() {
-    if (typeof this.dialogTarget.close === "function") {
-      this.dialogTarget.close()
-    } else {
-      this.dialogTarget.hidden = true
-    }
+    this.dialogTarget.close()
   }
 
   closeOnBackdrop(event) {
@@ -32,5 +28,9 @@ export default class extends Controller {
 
   stopPropagation(event) {
     event.stopPropagation()
+  }
+
+  show() {
+    if (!this.dialogTarget.open) this.dialogTarget.showModal()
   }
 }

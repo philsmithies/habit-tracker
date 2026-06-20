@@ -26,3 +26,7 @@ details > summary::-webkit-details-marker {
 dialog::backdrop {
   background: rgb(52 66 88 / 35%);
 }
+
+.number-entry-dialog {
+  margin: auto;
+}
