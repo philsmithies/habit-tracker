@@ -22,7 +22,14 @@ class HabitsController < ApplicationController
   end
 
   def destroy
-    Current.user.habits.find(params[:id]).destroy!
+    habit = Current.user.habits.find(params[:id])
+
+    unless ActiveSupport::SecurityUtils.secure_compare(params[:confirmation_name].to_s, habit.name)
+      redirect_to root_path(anchor: ActionView::RecordIdentifier.dom_id(habit)), alert: "Type the habit name exactly to delete it."
+      return
+    end
+
+    habit.destroy!
     redirect_to root_path, notice: "Habit deleted."
   end
 

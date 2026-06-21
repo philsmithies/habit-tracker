@@ -71,7 +71,7 @@
     <% maximum_value = entries_by_date.values.select { |entry| entry.occurred_on.year == selected_year }.filter_map(&:value).max %>
     <% today_entry = entries_by_date[Date.current] %>
 
-    <article id="<%= dom_id(habit) %>" data-calendar-year="<%= selected_year %>" class="rounded-[6px] border border-[#d8e1ed] bg-white px-8 py-8 sm:px-8 sm:py-8" <%= tag.attributes(data: { controller: "number-entry", number_entry_open_value: @log_habit_id == habit.id }) if habit.number? %>>
+    <article id="<%= dom_id(habit) %>" data-calendar-year="<%= selected_year %>" class="rounded-[6px] border border-[#d8e1ed] bg-white px-8 py-8 sm:px-8 sm:py-8" <%= tag.attributes(data: { controller: [ "delete-habit", ("number-entry" if habit.number?) ].compact.join(" "), delete_habit_name_value: habit.name, number_entry_open_value: @log_habit_id == habit.id }) %>>
       <div class="flex items-start justify-between">
         <h2 class="text-[26px] font-semibold leading-none text-[#344258]"><%= habit.name %></h2>
         <div class="flex items-center gap-5 text-[#c4d0df]">
@@ -89,7 +89,11 @@
               <% end %>
             </div>
           </details>
-          <%= button_to "⋮", habit_path(habit), method: :delete, class: "text-xl leading-none hover:text-rose-500", form: { data: { turbo_confirm: "Delete #{habit.name} and its history?" } } %>
+          <button type="button" class="text-[#91a1ba] hover:text-rose-600" title="Delete <%= habit.name %>" aria-label="Delete <%= habit.name %>" data-action="delete-habit#open">
+            <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M3.5 5.5h13M8 2.75h4M5.5 5.5l.75 11h7.5l.75-11M8 8.5v5M12 8.5v5"></path>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -179,6 +183,23 @@
           <% end %>
         </dialog>
       <% end %>
+
+      <dialog class="number-entry-dialog w-[min(92vw,420px)] rounded-[8px] border border-[#d8e1ed] bg-white p-0 shadow-2xl" data-delete-habit-target="dialog" data-action="click->delete-habit#closeOnBackdrop cancel->delete-habit#close">
+        <%= form_with url: habit_path(habit), method: :delete, class: "space-y-4 p-5", data: { action: "click->delete-habit#stopPropagation" } do |form| %>
+          <div>
+            <h3 class="text-lg font-semibold text-[#344258]">Delete <%= habit.name %>?</h3>
+            <p class="mt-1 text-sm leading-5 text-[#526077]">This permanently deletes the habit and all of its history.</p>
+          </div>
+          <label class="block">
+            <span class="mb-1 block text-sm text-[#526077]">Type <strong class="font-semibold text-[#344258]"><%= habit.name %></strong> to confirm</span>
+            <%= form.text_field :confirmation_name, autocomplete: "off", class: "h-11 w-full rounded border border-[#d8e1ed] px-3 text-[#344258] outline-none focus:border-[#aebdd0]", data: { delete_habit_target: "input", action: "input->delete-habit#validate" } %>
+          </label>
+          <div class="flex justify-end gap-2">
+            <button type="button" class="rounded px-4 py-2 text-[#526077] hover:bg-[#f7f9fc]" data-action="delete-habit#close">Cancel</button>
+            <%= form.submit "Delete habit", disabled: true, class: "cursor-pointer rounded bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40", data: { delete_habit_target: "submit" } %>
+          </div>
+        <% end %>
+      </dialog>
     </article>
   <% end %>
 </section>

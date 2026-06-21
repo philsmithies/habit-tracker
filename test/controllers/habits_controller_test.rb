@@ -41,7 +41,7 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
 
     get habits_url(log_habit_id: habit.id)
 
-    assert_select "article[data-controller='number-entry'][data-number-entry-open-value='true']" do
+    assert_select "article[data-controller~='number-entry'][data-number-entry-open-value='true']" do
       assert_select "dialog[data-number-entry-target='dialog']"
     end
   end
@@ -67,6 +67,40 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
       assert_select "span", text: "Jan"
       assert_select "span", text: "Dec"
     end
+  end
+
+  test "renders a named confirmation dialog for deleting a habit" do
+    habit = habits(:one)
+
+    get habits_url
+
+    assert_select "article#habit_#{habit.id}[data-controller~='delete-habit'][data-delete-habit-name-value=?]", habit.name do
+      assert_select "button[title='Delete #{habit.name}'][data-action='delete-habit#open'] svg"
+      assert_select "dialog[data-delete-habit-target='dialog']" do
+        assert_select "input[name='confirmation_name'][data-action='input->delete-habit#validate']"
+        assert_select "input[type='submit'][value='Delete habit'][disabled]"
+      end
+    end
+  end
+
+  test "requires the exact habit name to delete it" do
+    habit = habits(:one)
+
+    assert_no_difference -> { Habit.count } do
+      delete habit_url(habit), params: { confirmation_name: "Wrong name" }
+    end
+
+    assert_redirected_to %r{/\#habit_#{habit.id}}
+  end
+
+  test "deletes a habit after its name is confirmed" do
+    habit = habits(:one)
+
+    assert_difference -> { Habit.count }, -1 do
+      delete habit_url(habit), params: { confirmation_name: habit.name }
+    end
+
+    assert_redirected_to root_url
   end
 
   test "cannot delete another user's habit" do
