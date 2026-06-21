@@ -42,6 +42,15 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "renders logged heatmap cells without a form layout wrapper" do
+    habit = users(:one).habits.create!(name: "Read", color: "#8b5cf6", tracking_type: "number", unit: "pages")
+    habit.entries.create!(occurred_on: Date.current, value: 10)
+
+    get habits_url
+
+    assert_select "form.contents button.size-\\[13px\\]"
+  end
+
   test "cannot delete another user's habit" do
     assert_no_difference -> { Habit.count } do
       delete habit_url(habits(:two))
