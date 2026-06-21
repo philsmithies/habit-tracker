@@ -5,6 +5,7 @@ class HabitsController < ApplicationController
     @habit = Current.user.habits.new(tracking_type: params[:tracking_type])
     @show_habit_form = @habit.errors.any? || params[:tracking_type].present?
     @log_habit_id = params[:log_habit_id].to_i if params[:log_habit_id].present?
+    @selected_years = selected_years_for(@habits)
   end
 
   def create
@@ -16,6 +17,7 @@ class HabitsController < ApplicationController
     @habits = Current.user.habits.includes(:entries)
     @habit = error.record
     @show_habit_form = true
+    @selected_years = selected_years_for(@habits)
     render :index, status: :unprocessable_entity
   end
 
@@ -27,5 +29,14 @@ class HabitsController < ApplicationController
   private
     def habit_params
       params.expect(habit: [ :name, :color, :tracking_type, :unit ])
+    end
+
+    def selected_years_for(habits)
+      requested_years = params[:years].respond_to?(:to_unsafe_h) ? params[:years].to_unsafe_h : {}
+
+      habits.index_with do |habit|
+        requested_year = requested_years[habit.id.to_s].to_i
+        requested_year.between?(1970, Date.current.year) ? requested_year : Date.current.year
+      end.transform_keys(&:id)
     end
 end

@@ -30,3 +30,11 @@ dialog::backdrop {
 .number-entry-dialog {
   margin: auto;
 }
+
+.site-header {
+  z-index: 100;
+}
+
+.settings-menu {
+  z-index: 101;
+}

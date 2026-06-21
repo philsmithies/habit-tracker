@@ -4,14 +4,28 @@ module HabitsHelper
     (end_date - 52.weeks + 1.day)..end_date
   end
 
-  def habit_calendar_weeks
-    habit_calendar_days.each_slice(7).to_a
+  def habit_calendar_weeks(year = nil)
+    days = if year
+      Date.new(year, 1, 1).beginning_of_week(:monday)..Date.new(year, 12, 31).end_of_week(:monday)
+    else
+      habit_calendar_days
+    end
+
+    days.each_slice(7).to_a
   end
 
   def month_label_for(week, previous_week)
     return week.first.strftime("%b") unless previous_week
 
     week.first.strftime("%b") if week.first.month != previous_week.first.month
+  end
+
+  def calendar_year_month_label_for(week, year)
+    week.find { |date| date.year == year && date.day == 1 }&.strftime("%b")
+  end
+
+  def habit_calendar_years(habit)
+    ([ Date.current.year, Date.current.year - 1 ] + habit.entries.map { |entry| entry.occurred_on.year }).uniq.sort.reverse
   end
 
   def habit_entry_color(habit, entry, maximum_value:)

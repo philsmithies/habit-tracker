@@ -12,6 +12,10 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='stylesheet'][href*='tailwind']"
     assert_select "h2", text: habits(:one).name
     assert_select "h2", text: habits(:two).name, count: 0
+    assert_select "header.site-header"
+    assert_select "nav.overflow-x-auto", count: 0
+    assert_select "span", text: "Profile", count: 0
+    assert_select ".settings-menu"
   end
 
   test "creates a habit owned by the signed in user" do
@@ -49,6 +53,20 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
     get habits_url
 
     assert_select "form.contents button.size-\\[13px\\]"
+  end
+
+  test "filters an individual habit heatmap by calendar year" do
+    habit = habits(:one)
+    selected_year = Date.current.year - 1
+
+    get habits_url(years: { habit.id => selected_year })
+
+    assert_select "article#habit_#{habit.id}[data-calendar-year='#{selected_year}']" do
+      assert_select "[aria-label='#{selected_year} calendar']"
+      assert_select "summary[title='Calendar year: #{selected_year}']"
+      assert_select "span", text: "Jan"
+      assert_select "span", text: "Dec"
+    end
   end
 
   test "cannot delete another user's habit" do
