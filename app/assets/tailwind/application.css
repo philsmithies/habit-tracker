@@ -38,3 +38,20 @@ dialog::backdrop {
 .settings-menu {
   z-index: 101;
 }
+
+.safe-area-header {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-content {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-left: max(0.25rem, env(safe-area-inset-left));
+  padding-right: max(0.25rem, env(safe-area-inset-right));
+}
+
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+}

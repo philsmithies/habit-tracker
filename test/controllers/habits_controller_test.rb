@@ -10,6 +10,9 @@ class HabitsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "link[rel='stylesheet'][href*='tailwind']"
+    assert_select "link[rel='manifest'][href*='manifest']"
+    assert_select "link[rel='apple-touch-icon'][sizes='180x180']"
+    assert_select "meta[name='viewport'][content*='viewport-fit=cover']"
     assert_select "h2", text: habits(:one).name
     assert_select "h2", text: habits(:two).name, count: 0
     assert_select "header.site-header"

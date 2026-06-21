@@ -1,7 +1,9 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
-if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+# Prepare every production process before it starts. Hosting platforms often
+# wrap or override the Docker command, so matching one exact server command can
+# leave the app running against an uninitialized database.
+if [ "${RAILS_ENV:-production}" == "production" ]; then
   ./bin/rails db:prepare
 fi
 
