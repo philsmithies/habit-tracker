@@ -133,9 +133,9 @@
           <% end %>
         <% else %>
           <% if habit.number? %>
-            <%= link_to habits_path(log_habit_id: habit.id), class: "rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]", data: { action: "number-entry#open", date: Date.current, date_label: Date.current.to_fs(:long) } do %>
+            <button type="button" class="rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]" data-action="number-entry#open" data-date="<%= Date.current %>" data-date-label="<%= Date.current.to_fs(:long) %>">
               Log today <span class="ml-2">→</span>
-            <% end %>
+            </button>
           <% else %>
             <%= button_to habit_entries_path(habit), class: "rounded-[5px] border border-[#d8e1ed] bg-white px-3 py-2.5 text-[16px] font-medium text-[#344258] hover:bg-[#f9fafc]" do %>
               Log today <span class="ml-2">→</span>
